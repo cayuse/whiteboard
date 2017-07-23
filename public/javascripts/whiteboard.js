@@ -6,14 +6,11 @@ $().ready(function () {
     var lastEvent;
     var lastRemoteEvent=[-1,-1,-1];
     var mouseDown = false;
-    alert(roomId)
-    $('form').submit(function () {
-        socket.emit('chat message', $('#m').val());
-        $('#m').val('');
-        return false;
-    });
-    socket.on('chat message', function (msg) {
-        $('#messages').append($('<li>').text(msg));
+    var lineWidth = 5;
+
+    socket.on('connect', function() {
+        // connect to the appropriate room
+        socket.emit('join', roomId);
     });
 
     socket.on('mouseup', function() {
@@ -30,6 +27,7 @@ $().ready(function () {
         context.moveTo(lastRemoteEvent[0], lastRemoteEvent[1]);
         context.lineTo(msg[0], msg[1]);
         context.strokeStyle = msg[2];
+        context.lineWidth = lineWidth;
         context.stroke();
         lastRemoteEvent = msg;
     });
@@ -83,17 +81,17 @@ $().ready(function () {
             context.moveTo(lastEvent.offsetX, lastEvent.offsetY);
             context.lineTo(e.offsetX, e.offsetY);
             context.strokeStyle = color;
-            context.lineWidth = 5;
+            context.lineWidth = lineWidth;
             context.stroke();
             lastEvent = e;
-            socket.emit('draw message', [e.offsetX, e.offsetY, context.strokeStyle ])
+            socket.emit('draw message', [e.offsetX, e.offsetY, context.strokeStyle, roomId ])
         }
     }).mouseup(function () {
         mouseDown = false;
-        socket.emit('mouseup', null);
+        socket.emit('mouseup', roomId);
     }).mouseleave(function () {
         $canvas.mouseup();
-        socket.emit('mouseup', null);
+        socket.emit('mouseup', roomId);
     });
 
 });
