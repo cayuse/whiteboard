@@ -1,0 +1,15 @@
+extends layout
+
+block content
+    canvas#one(width="1900" height="1000")
+    div.controls
+        ul#colors
+            li.black.selected &nbsp;
+            li.red  &nbsp;
+            li.purple &nbsp;
+            li.yellow &nbsp;
+            li.pink &nbsp;
+            li.brown &nbsp;
+            li.blue &nbsp;
+            li.green &nbsp;
+    script var roomId = '!{roomId}';

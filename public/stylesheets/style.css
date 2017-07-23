@@ -1,0 +1,61 @@
+
+* { margin: 0; padding: 0; box-sizing: border-box;}
+body { font: 13px Helvetica, Arial;}
+form { background: #FFF; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+#messages { list-style-type: none; margin: 0; padding: 0; }
+#messages li { padding: 5px 10px; }
+#messages li:nth-child(odd) { background: #f00; }
+.controls {
+    position:absolute;
+    z-index: 1;
+    left:10px;
+    top:10px;
+    min-height: 60px;
+    margin: 0 auto;
+    width: 600px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+#colors ul {
+    list-style: none;
+    margin: 0;
+    float: left;
+    padding: 10px 0 20px;
+    width: 10px;
+    text-align: center;
+}
+#colors li{
+    width: 10%;
+}
+.black {
+    background: #000;
+}
+.red {
+    background: #e71e25;
+}
+
+.blue {
+    background: #2d53a5;
+}
+
+.yellow {
+    background: #feba1b;
+}
+
+.green {
+    background: #017d35;
+}
+
+.purple {
+    background: #6b48a2;
+}
+
+.pink {
+    background: #ff5795;
+}
+
+.brown {
+    background: #502e24;
+}
