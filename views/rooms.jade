@@ -2,14 +2,14 @@ extends layout
 
 block content
     canvas#one(width="1900" height="1000")
-    div.controls
+    div.controls.draggable
         ul#colors
-            li.black.selected &nbsp;
-            li.red  &nbsp;
-            li.purple &nbsp;
-            li.yellow &nbsp;
-            li.pink &nbsp;
-            li.brown &nbsp;
-            li.blue &nbsp;
-            li.green &nbsp;
+            li.black.unselectable.selected &nbsp;
+            li.red.unselectable  &nbsp;
+            li.purple.unselectable &nbsp;
+            li.yellow.unselectable &nbsp;
+            li.pink.unselectable &nbsp;
+            li.brown.unselectable &nbsp;
+            li.blue.unselectable &nbsp;
+            li.green.unselectable &nbsp;
     script var roomId = '!{roomId}';

@@ -8,6 +8,8 @@ $().ready(function () {
     var mouseDown = false;
     var lineWidth = 5;
 
+    $( ".draggable" ).draggable();
+
     socket.on('connect', function() {
         // connect to the appropriate room
         socket.emit('join', roomId);
