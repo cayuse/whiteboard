@@ -4,36 +4,40 @@ $().ready(function () {
     var $canvas = $("canvas");
     var context = $canvas[0].getContext("2d");
     var lastEvent;
-    var lastRemoteEvent=[-1,-1,-1];
+    var lastRemoteEvent = {};
     var mouseDown = false;
-    var lineWidth = 5;
+    var lineWidth = 10;
 
-    $( ".draggable" ).draggable();
+    $(".draggable").draggable();
 
-    socket.on('connect', function() {
+    socket.on('connect', function () {
         // connect to the appropriate room
         socket.emit('join', roomId);
     });
 
-    socket.on('mouseup', function() {
-        lastRemoteEvent=[-1,-1,-1];
+    socket.on('mouseup', function (msg) {
+        lastRemoteEvent[msg['user']] = [-1, -1 ];
     });
 
     socket.on('draw message', function (msg) {
-        if (lastRemoteEvent[0] === -1)
+        if (!lastRemoteEvent[msg['user']])
         {
-            lastRemoteEvent = msg;
+            lastRemoteEvent[msg['user']] = [-1,-1];
+        }
+        if (lastRemoteEvent[msg['user']][0] === -1) {
+            lastRemoteEvent[msg['user']] = [ msg['offX'], msg['offY'] ];
             return;
         }
         context.beginPath();
-        context.moveTo(lastRemoteEvent[0], lastRemoteEvent[1]);
-        context.lineTo(msg[0], msg[1]);
-        context.strokeStyle = msg[2];
+        context.moveTo(lastRemoteEvent[msg['user']][0], lastRemoteEvent[msg['user']][1]);
+        context.lineTo(msg['offX'], msg['offY']);
+        context.strokeStyle = msg['stroke'];
         context.lineWidth = lineWidth;
         context.stroke();
-        lastRemoteEvent = msg;
+        lastRemoteEvent[msg['user']] = [ msg['offX'], msg['offY'], msg['stroke'] ];
     });
 
+    // this just sets the color when the picker gets clicked
     $(".controls").on("click", "li", function () {
         $(this).siblings().removeClass("selected");
         $(this).addClass("selected");
@@ -47,6 +51,7 @@ $().ready(function () {
         $("#newColor").css("background-color", "rgb(" + r + "," + g + ", " + b + ")");
     }
 
+    // these functions draw and emit draw messages
     $canvas.mousedown(function (e) {
         lastEvent = e;
         mouseDown = true;
@@ -59,8 +64,15 @@ $().ready(function () {
             context.lineWidth = lineWidth;
             context.stroke();
             lastEvent = e;
-            socket.emit('draw message', [e.offsetX, e.offsetY, context.strokeStyle, roomId ])
+            socket.emit('draw message', {
+                "offX": e.offsetX,
+                "offY": e.offsetY,
+                "stroke": context.strokeStyle,
+                "roomId": roomId
+            })
         }
+
+    // These functions tell the other clients you are done drawing
     }).mouseup(function () {
         mouseDown = false;
         socket.emit('mouseup', roomId);
