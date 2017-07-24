@@ -6,7 +6,7 @@ $().ready(function () {
     var lastEvent;
     var lastRemoteEvent = {};
     var mouseDown = false;
-    var lineWidth = 10;
+    var lineWidth = 5;
 
     $(".draggable").draggable();
 
