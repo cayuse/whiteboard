@@ -9,7 +9,7 @@ var debug = require('debug')('untitled:server');
 var http = require('http');
 var config = require(__dirname + '/config.js')['production'];
 var mongoose = require('mongoose');
-
+mongoose.Promise = require('bluebird');
 
 /**
  * Get port from environment and store in Express.
@@ -36,16 +36,16 @@ server.on('listening', onListening);
  *  Set up mongodb connection
  */
 // connect
-mongoose.connect('mongodb://' + config.database.user + ':'
+var promise = mongoose.createConnection('mongodb://' + config.database.user + ':'
                               + config.database.pass + '@'
                               + config.database.host + ':'
                               + config.database.port
-                              + '/admin', function (err) {
-    if (err) {
-        console.log(err);
-    } else {
-        console.log('Connected to DB');
-    }
+                              + '/admin', {
+    useMongoClient: true
+});
+
+promise.then(function(db) {
+    console.log("database connected");
 });
 
 // set up a schema
@@ -71,17 +71,23 @@ io.on('connection', function (socket) {
         msg['user'] = this.id;
         var newMsg = new Message({userId: this.id, room: msg['roomId'], message: JSON.stringify(msg) });
         newMsg.save(function(err, newMsg){
-            if(err) throw err;
-            socket.broadcast.to(msg['roomId']).emit('draw message', msg);
+            if(err) console.log(err);
         });
+        socket.broadcast.to(msg['roomId']).emit('draw message', msg);
+    });
+});
 
+io.on('connection', function (socket) {
+    socket.on('mousedown', function (msg) {
+        msg['user'] = this.id;
+        socket.broadcast.to(msg['room']).emit('mousedown', msg);
     });
 });
 
 io.on('connection', function (socket) {
     socket.on('mouseup', function (msg) {
-        var ret = {'user': this.id, 'roomId': msg};
-        socket.broadcast.to(msg).emit('mouseup', ret);
+        msg['user'] = this.id;
+        socket.broadcast.to(msg['room']).emit('mouseup', msg);
     });
 });
 

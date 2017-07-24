@@ -8,6 +8,7 @@
     width: 10%;
     border-radius: 5px;
     overflow: hidden;
+    border: 5px solid #AAA;
 }
 ul {
     list-style-type: none;
@@ -46,6 +47,10 @@ ul {
 
 .brown {
     background: #502e24;
+}
+
+.white {
+    background: #FFF;
 }
 
 .unselectable {
