@@ -7,6 +7,9 @@
 var app = require('../app');
 var debug = require('debug')('untitled:server');
 var http = require('http');
+var config = require(__dirname + '/config.js')['production'];
+var mongoose = require('mongoose');
+
 
 /**
  * Get port from environment and store in Express.
@@ -29,6 +32,34 @@ server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
+/**
+ *  Set up mongodb connection
+ */
+// connect
+mongoose.connect('mongodb://' + config.database.user + ':'
+                              + config.database.pass + '@'
+                              + config.database.host + ':'
+                              + config.database.port
+                              + '/admin', function (err) {
+    if (err) {
+        console.log(err);
+    } else {
+        console.log('Connected to DB');
+    }
+});
+
+// set up a schema
+var msgSchema = mongoose.Schema({
+    userId:   String,
+    room:     String,
+    message:  String,
+    created: {type: Date, default: Date.now}
+});
+
+var Message = mongoose.model('Message', msgSchema);
+
+
+
 io.sockets.on('connection', function (socket) {
     socket.on('join', function (room) {
         socket.join(room);
@@ -38,13 +69,18 @@ io.sockets.on('connection', function (socket) {
 io.on('connection', function (socket) {
     socket.on('draw message', function (msg) {
         msg['user'] = this.id;
-        socket.broadcast.to(msg['roomId']).emit('draw message', msg);
+        var newMsg = new Message({userId: this.id, room: msg['roomId'], message: JSON.stringify(msg) });
+        newMsg.save(function(err, newMsg){
+            if(err) throw err;
+            socket.broadcast.to(msg['roomId']).emit('draw message', msg);
+        });
+
     });
 });
 
 io.on('connection', function (socket) {
     socket.on('mouseup', function (msg) {
-        var ret = {'user' : this.id, 'roomId' : msg};
+        var ret = {'user': this.id, 'roomId': msg};
         socket.broadcast.to(msg).emit('mouseup', ret);
     });
 });
