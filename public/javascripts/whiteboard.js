@@ -11,19 +11,18 @@ $().ready(function () {
 
     $(".draggable").draggable();
 
+    // emit a message when the room is joined.
     socket.on('connect', function () {
         // connect to the appropriate room
         socket.emit('join', roomId);
     });
 
-    socket.on('mousedown', function (msg) {
-        lastRemoteEvent[msg['user']] = [msg['offX']], [msg['offY']];
-    });
-
+    // clear remote user's last event when it sends a mouseup
     socket.on('mouseup', function (msg) {
         lastRemoteEvent[msg['user']] = [-1, -1];
     });
 
+    // draw events triggered by socket messages
     socket.on('draw message', function (msg) {
         if (!lastRemoteEvent[msg['user']]) {
             lastRemoteEvent[msg['user']] = [-1, -1];
@@ -45,12 +44,14 @@ $().ready(function () {
     });
 
     // this just sets the color when the picker gets clicked
+    // will probably be handled differently in the future
     $(".controls").on("click", "li", function () {
         $(this).siblings().removeClass("selected");
         $(this).addClass("selected");
         color = $(this).css("background-color");
     });
 
+    //helper for above
     function changeColor() {
         var r = $("#red").val();
         var g = $("#green").val();

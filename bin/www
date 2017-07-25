@@ -33,6 +33,7 @@ server.on('listening', onListening);
 
 /**
  *  Set up mongodb connection
+ *  I'm getting a deprication warning, but so far it doesn't save with my "fixes", so leaving it for now
  */
 // connect
 mongoose.connect('mongodb://' + config.database.user + ':'
@@ -55,13 +56,16 @@ var msgSchema = mongoose.Schema({
 var Message = mongoose.model('Message', msgSchema);
 
 
-
+// Handle a client request to join a room.
 io.sockets.on('connection', function (socket) {
     socket.on('join', function (room) {
         socket.join(room);
     });
 });
 
+
+// Handle a 'draw messag' this is the method that reflects drawing on the screen while the mouse is moving
+// and is by far the busiest
 io.on('connection', function (socket) {
     socket.on('draw message', function (msg) {
         msg['user'] = this.id;
@@ -70,6 +74,7 @@ io.on('connection', function (socket) {
         socket.broadcast.to(msg['roomId']).emit('draw message', msg);
     });
 });
+
 
 io.on('connection', function (socket) {
     socket.on('mousedown', function (msg) {
