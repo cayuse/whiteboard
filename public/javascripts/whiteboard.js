@@ -14,33 +14,33 @@ $().ready(function () {
     // emit a message when the room is joined.
     socket.on('connect', function () {
         // connect to the appropriate room
-        socket.emit('join', roomId);
+        socket.emit('join', {"name": roomId});
     });
 
     // clear remote user's last event when it sends a mouseup
     socket.on('mouseup', function (msg) {
-        lastRemoteEvent[msg['user']] = [-1, -1];
+        lastRemoteEvent[msg.user] = [-1, -1];
     });
 
     // draw events triggered by socket messages
     socket.on('draw message', function (msg) {
-        if (!lastRemoteEvent[msg['user']]) {
-            lastRemoteEvent[msg['user']] = [-1, -1];
+        if (!lastRemoteEvent[msg.user]) {
+            lastRemoteEvent[msg.user] = [-1, -1];
         }
-        if (lastRemoteEvent[msg['user']][0] === -1) {
-            lastRemoteEvent[msg['user']] = [msg['offX'], msg['offY']];
+        if (lastRemoteEvent[msg.user][0] === -1) {
+            lastRemoteEvent[msg.user] = [msg.offX, msg.offY];
             return;
         }
         var segment = {
-            oldX: lastRemoteEvent[msg['user']][0],
-            oldY: lastRemoteEvent[msg['user']][1],
-            newX: msg['offX'],
-            newY: msg['offY'],
-            color: msg['stroke'],
+            oldX: lastRemoteEvent[msg.user][0],
+            oldY: lastRemoteEvent[msg.user][1],
+            newX: msg.offX,
+            newY: msg.offY,
+            color: msg.stroke,
             lineWidth: lineWidth
         };
         drawLine(segment);
-        lastRemoteEvent[msg['user']] = [msg['offX'], msg['offY']];
+        lastRemoteEvent[msg.user] = [msg.offX, msg.offY];
     });
 
     // this just sets the color when the picker gets clicked
@@ -90,6 +90,7 @@ $().ready(function () {
 
     // Emitter Functions.
     function mouseupMessage() {
+        lastEmit = lastEmit - 11;
         socket.emit('mouseup', {'room': roomId});
     }
 
@@ -98,7 +99,7 @@ $().ready(function () {
             "offX": e.offsetX,
             "offY": e.offsetY,
             "stroke": context.strokeStyle,
-            "roomId": roomId
+            "room": roomId
         });
     }
 
