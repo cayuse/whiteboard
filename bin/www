@@ -125,8 +125,10 @@ var msgSchema = {
 */
 function dbInsert(room, msg){
     MongoClient.connect(dbURL, function(err, db) {
-            msg.timestamp = Date();
+        if (err) throw err;
+            msg.timestamp = new Date().getTime();
         db.collection(room).insertOne(msg, function(err, res) {
+            if (err) throw err;
             db.close();
         });
     });
@@ -136,8 +138,10 @@ io.sockets.on('connection', function (socket) {
     socket.on('join', function (room) {
         var id = this.id;
         MongoClient.connect(dbURL, function(err, db) {
-            var mysort = { _id: 1 };
-            db.collection(room.name).find().sort(mysort).toArray(function(err, result) {
+            if (err) throw err;
+            var mysort = { timestamp: 1 };
+            db.collection(String(room.name)).find().sort(mysort).toArray(function(err, result) {
+                if (err) throw err;
                 result.forEach(function(msg) {
                     socket.emit(msg.type, msg);
                 });
