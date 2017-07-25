@@ -9,7 +9,6 @@ var debug = require('debug')('untitled:server');
 var http = require('http');
 var config = require(__dirname + '/config.js')['production'];
 var mongoose = require('mongoose');
-mongoose.Promise = require('bluebird');
 
 /**
  * Get port from environment and store in Express.
@@ -36,7 +35,7 @@ server.on('listening', onListening);
  *  Set up mongodb connection
  */
 // connect
-var promise = mongoose.createConnection('mongodb://' + config.database.user + ':'
+mongoose.connect('mongodb://' + config.database.user + ':'
                               + config.database.pass + '@'
                               + config.database.host + ':'
                               + config.database.port
@@ -44,9 +43,6 @@ var promise = mongoose.createConnection('mongodb://' + config.database.user + ':
     useMongoClient: true
 });
 
-promise.then(function(db) {
-    console.log("database connected");
-});
 
 // set up a schema
 var msgSchema = mongoose.Schema({
@@ -70,9 +66,7 @@ io.on('connection', function (socket) {
     socket.on('draw message', function (msg) {
         msg['user'] = this.id;
         var newMsg = new Message({userId: this.id, room: msg['roomId'], message: JSON.stringify(msg) });
-        newMsg.save(function(err, newMsg){
-            if(err) console.log(err);
-        });
+        newMsg.save().then();
         socket.broadcast.to(msg['roomId']).emit('draw message', msg);
     });
 });

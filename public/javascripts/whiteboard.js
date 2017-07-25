@@ -4,8 +4,6 @@ $().ready(function () {
     var $canvas = $("canvas");
     var context = $canvas[0].getContext("2d");
     var lastEvent;
-    var oddEvent;
-    var curvePoint;
     var lastRemoteEvent = {};
     var mouseDown = false;
     var lineWidth = 5;
@@ -18,31 +16,32 @@ $().ready(function () {
         socket.emit('join', roomId);
     });
 
-    socket.on('mousedown', function(msg) {
+    socket.on('mousedown', function (msg) {
         lastRemoteEvent[msg['user']] = [msg['offX']], [msg['offY']];
     });
 
     socket.on('mouseup', function (msg) {
-        lastRemoteEvent[msg['user']] = [-1, -1 ];
+        lastRemoteEvent[msg['user']] = [-1, -1];
     });
 
     socket.on('draw message', function (msg) {
-        if (!lastRemoteEvent[msg['user']])
-        {
-            lastRemoteEvent[msg['user']] = [-1,-1];
+        if (!lastRemoteEvent[msg['user']]) {
+            lastRemoteEvent[msg['user']] = [-1, -1];
         }
         if (lastRemoteEvent[msg['user']][0] === -1) {
-            lastRemoteEvent[msg['user']] = [ msg['offX'], msg['offY'] ];
+            lastRemoteEvent[msg['user']] = [msg['offX'], msg['offY']];
             return;
         }
-        context.beginPath();
-        context.moveTo(lastRemoteEvent[msg['user']][0], lastRemoteEvent[msg['user']][1]);
-        context.quadraticCurveTo(msg['cpX'], msg['cpY'], msg['offX'], msg['offY']);
-        //context.lineTo(msg['offX'], msg['offY']);
-        context.strokeStyle = msg['stroke'];
-        context.lineWidth = lineWidth;
-        context.stroke();
-        lastRemoteEvent[msg['user']] = [ msg['offX'], msg['offY'] ];
+        var segment = {
+            oldX: lastRemoteEvent[msg['user']][0],
+            oldY: lastRemoteEvent[msg['user']][1],
+            newX: msg['offX'],
+            newY: msg['offY'],
+            color: msg['stroke'],
+            lineWidth: lineWidth
+        };
+        drawLine(segment);
+        lastRemoteEvent[msg['user']] = [msg['offX'], msg['offY']];
     });
 
     // this just sets the color when the picker gets clicked
@@ -63,44 +62,59 @@ $().ready(function () {
     $canvas.mousedown(function (e) {
         lastEvent = e;
         mouseDown = true;
-        socket.emit('mousedown', { "offX": e.offsetX, "offY": e.offsetY, 'room': roomId }
-        );
-
+        drawMessage(e); // emit a draw msg imed on mouse down
     }).mousemove(function (e) {
-        if (mouseDown && $.now() - lastEmit > 7) {
-            oddEvent = !oddEvent;
-            if (oddEvent || $.now() - lastEmit > 100)
-            {
-                curvePoint = e;
-                lastEmit = $.now();
-                return;
-            }
-            lastEmit = $.now();
-            context.beginPath();
-            context.moveTo(lastEvent.offsetX, lastEvent.offsetY);
-//            context.quadraticCurveTo(curvePoint.offsetX, curvePoint.offsetY, e.offsetX, e.offsetY);
-            context.lineTo(e.offsetX, e.offsetY);
-            context.strokeStyle = color;
-            context.lineWidth = lineWidth;
-            context.stroke();
+        if (mouseDown && $.now() - lastEmit > 10) { // reduce emit frequency
+            var segment = {
+                oldX: lastEvent.offsetX,
+                oldY: lastEvent.offsetY,
+                newX: e.offsetX,
+                newY: e.offsetY,
+                color: color,
+                lineWidth: lineWidth
+            };
+            drawLine(segment);
             lastEvent = e;
-            socket.emit('draw message', {
-                "offX": e.offsetX,
-                "offY": e.offsetY,
-                "cpX":  curvePoint.offsetX,
-                "cpY":  curvePoint.offsetY,
-                "stroke": context.strokeStyle,
-                "roomId": roomId
-            })
+            drawMessage(e);
         }
 
-    // These functions tell the other clients you are done drawing
+        // These functions tell the other clients you are done drawing
     }).mouseup(function () {
         mouseDown = false;
-        socket.emit('mouseup', {'room': roomId} );
+        mouseupMessage();
     }).mouseleave(function () {
         $canvas.mouseup();
-        socket.emit('mouseup', {'room': roomId} );
+        mouseupMessage();
     });
 
+    // Emitter Functions.
+    function mouseupMessage() {
+        socket.emit('mouseup', {'room': roomId});
+    }
+
+    function drawMessage(e) {
+        socket.emit('draw message', {
+            "offX": e.offsetX,
+            "offY": e.offsetY,
+            "stroke": context.strokeStyle,
+            "roomId": roomId
+        });
+    }
+
+    /*
+    Drawing function. It should recieve a dict in the following format
+    drawSegment = { oldX: int, oldY: int, newX: int newY: int
+                    strokeStyle: color, lineWidth: int}
+     */
+    function drawLine(s) {
+        context.beginPath();
+        context.moveTo(s.oldX, s.oldY);
+        var cx = (s.oldX + s.newX) / 2;
+        var cy = (s.oldY + s.newY) / 2;
+        context.quadraticCurveTo(cx, cy, s.newX, s.newY);
+        //context.lineTo(e.offsetX, e.offsetY);
+        context.strokeStyle = s.color;
+        context.lineWidth = s.lineWidth;
+        context.stroke();
+    }
 });
