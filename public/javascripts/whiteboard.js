@@ -90,7 +90,6 @@ $().ready(function () {
 
     // Emitter Functions.
     function mouseupMessage() {
-        lastEmit = lastEmit - 11;
         socket.emit('mouseup', {'room': roomId});
     }
 
