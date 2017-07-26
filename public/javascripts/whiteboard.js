@@ -1,8 +1,8 @@
 $().ready(function () {
     var socket = io();
     var color = $(".selected").css("background-color");
-    var $canvas = $("canvas");
-    var context = $canvas[0].getContext("2d");
+    var canvas = $("canvas");
+    var context = canvas[0].getContext("2d");
     var lastEvent;
     var lastRemoteEvent = {};
     var mouseDown = false;
@@ -20,6 +20,11 @@ $().ready(function () {
     // clear remote user's last event when it sends a mouseup
     socket.on('mouseup', function (msg) {
         lastRemoteEvent[msg.user] = [-1, -1];
+    });
+
+    // clear board
+    socket.on('clear message', function(msg) {
+        clearBoard(msg.color);
     });
 
     // draw events triggered by socket messages
@@ -51,7 +56,17 @@ $().ready(function () {
         color = $(this).css("background-color");
     });
 
-    //helper for above
+    $(".controls").on("dblclick", 'li', function() {
+	color = $(this).css("background-color");
+        clearBoard(color);
+        clearMessage();
+    });
+
+    //helpers for above
+    function clearBoard(myColor) {
+        context.fillStyle=myColor;
+        context.fillRect(0,0, 1900,1000);
+    }
     function changeColor() {
         var r = $("#red").val();
         var g = $("#green").val();
@@ -60,7 +75,7 @@ $().ready(function () {
     }
 
     // these functions draw and emit draw messages
-    $canvas.mousedown(function (e) {
+    canvas.mousedown(function (e) {
         lastEvent = e;
         mouseDown = true;
         drawMessage(e); // emit a draw msg imed on mouse down
@@ -84,13 +99,17 @@ $().ready(function () {
         mouseDown = false;
         mouseupMessage();
     }).mouseleave(function () {
-        $canvas.mouseup();
+        canvas.mouseup();
         mouseupMessage();
     });
 
     // Emitter Functions.
     function mouseupMessage() {
         socket.emit('mouseup', {'room': roomId});
+    }
+
+    function clearMessage() {
+        socket.emit('clear message', {'color': color, 'room': roomId});
     }
 
     function drawMessage(e) {

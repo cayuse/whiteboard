@@ -139,7 +139,7 @@ io.sockets.on('connection', function (socket) {
         var id = this.id;
         MongoClient.connect(dbURL, function(err, db) {
             if (err) throw err;
-            var mysort = { timestamp: 1 };
+            var mysort = { _id: 1 };
             db.collection(String(room.name)).find().sort(mysort).toArray(function(err, result) {
                 if (err) throw err;
                 result.forEach(function(msg) {
@@ -173,5 +173,14 @@ io.on('connection', function (socket) {
         msg.user = this.id;
         dbInsert(msg.room, msg);
         socket.broadcast.to(msg.room).emit('mouseup', msg);
+    });
+});
+
+io.on('connection',  function (socket) {
+    socket.on('clear message', function (msg) {
+        msg.type = 'clear message';
+        msg.user = this.id;
+        dbInsert(msg.room, msg);
+        socket.broadcast.to(msg.room).emit('clear message', msg);
     });
 });
