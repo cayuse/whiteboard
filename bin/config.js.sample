@@ -1,0 +1,33 @@
+/*
+ * config.js is required for this app to run.
+ * here is a sample of how the file should look.
+ * You need to fill it with your own connection information and rename it to just config.js
+ * While this does allow for you to have a development and production connection, the line in
+ * bin/www  var config = require(__dirname + '/config.js')['production'];
+ * simply hard codes this app to use production. If you want the app to have a development mode, you'll have to
+ * edit that file and make it check an environment variable or use some other method to differentiate.
+ */
+var config = {
+
+    development: {
+        //mongodb connection settings
+        database: {
+            host: '127.0.0.1',
+            port: '27017',
+            db: 'development-db',
+            user: 'admin',
+            pass: 'password'
+        }
+    },
+    production: {
+        //mongodb connection settings
+        database: {
+            host: '127.0.0.1',
+            port: '27017',
+            db: 'production-db',
+            user: 'admin',
+            pass: 'password'
+        }
+    }
+};
+module.exports = config;

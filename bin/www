@@ -7,26 +7,24 @@
 var app = require('../app');
 var debug = require('debug')('untitled:server');
 var http = require('http');
+
+/*
+  *  NOTE: this version of the app simply asserts production mode.
+  *  The app does not ship with a config.js file, but it does have a sample
+  *  please see config.js.sample for more information.
+  */
 var config = require(__dirname + '/config.js')['production'];
 var MongoClient = require('mongodb').MongoClient
     , assert = require('assert');
-/**
- * Get port from environment and store in Express.
- */
 
 
-/**
- * Create HTTP server.
- */
-
+// declare server
 var server = http.createServer(app);
 var io = require('socket.io')(server);
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
-/**
- * Listen on provided port, on all network interfaces.
- */
 
+// start listening
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
@@ -98,21 +96,20 @@ function onListening() {
 
 /**
  *  Set up mongodb connection
- *  I'm getting a deprication warning, but so far it doesn't save with my "fixes", so leaving it for now
  */
 // connect
 var dbURL = 'mongodb://'
-            + config.database.user + ':'
-            + config.database.pass + '@'
-            + config.database.host + ':'
-            + config.database.port
-            + '/admin';
+    + config.database.user + ':'
+    + config.database.pass + '@'
+    + config.database.host + ':'
+    + config.database.port
+    + '/admin';
 
-var db = MongoClient.connect(dbURL, function(err) {
-    if (err){
+var db = MongoClient.connect(dbURL, function (err) {
+    if (err) {
         throw err;
     } else {
-        console.log("Database Connected");
+        //console.log("Database Connected");
     }
 });
 
@@ -123,41 +120,44 @@ var msgSchema = {
     created: {type: Date, default: Date.now}
 }
 */
-function dbInsert(room, msg){
-    MongoClient.connect(dbURL, function(err, db) {
+function dbInsert(room, msg) {
+    MongoClient.connect(dbURL, function (err, db) {
         if (err) throw err;
-            msg.timestamp = new Date().getTime();
-        db.collection(room).insertOne(msg, function(err, res) {
+        msg.timestamp = new Date().getTime();
+        db.collection(room).insertOne(msg, function (err, res) {
             if (err) throw err;
             db.close();
         });
     });
 }
+
 // Handle a client request to join a room.
 io.sockets.on('connection', function (socket) {
     socket.on('join', function (room) {
         var id = this.id;
-        MongoClient.connect(dbURL, function(err, db) {
+        MongoClient.connect(dbURL, function (err, db) {
             if (err) throw err;
-            var mysort = { _id: 1 };
-            db.collection(String(room.name)).find().sort(mysort).toArray(function(err, result) {
+            var mysort = {_id: 1};
+            db.collection(String(room.name)).find().sort(mysort).toArray(function (err, result) {
                 if (err) throw err;
-                result.forEach(function(msg) {
+                /*
+                 *  this could probably be optimized by sending the whole thing to the client and having the
+                 *  client decode it and use it, but this works so long as lots of people aren't constantly
+                 *  re-joining a room with lots of drawing.
+                 */
+                result.forEach(function (msg) {
                     socket.emit(msg.type, msg);
                 });
                 db.close();
             });
         });
-        //result.foreach(function(msg){
-        //    socket.broadcast.to(socketid).emit();
-        //})
         socket.join(room.name);
     });
 });
 
 
 // Handle a 'draw message' this is the method that reflects drawing on the screen while the mouse is moving
-// and is by far the busiest
+
 io.on('connection', function (socket) {
     socket.on('draw message', function (msg) {
         msg.type = 'draw message';
@@ -176,7 +176,7 @@ io.on('connection', function (socket) {
     });
 });
 
-io.on('connection',  function (socket) {
+io.on('connection', function (socket) {
     socket.on('clear message', function (msg) {
         msg.type = 'clear message';
         msg.user = this.id;
