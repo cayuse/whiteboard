@@ -8,9 +8,11 @@ $().ready(function () {
     var mouseDown = false;
     var lineWidth = 5;
     var lastEmit = $.now();
+    var playRealTime = false;
 
     $(".draggable").draggable();
 
+    // The socket.on events immediately call local functions, so that the events can be triggered locally.
     // emit a message when the room is joined.
     socket.on('connect', function () {
         // connect to the appropriate room
@@ -19,8 +21,12 @@ $().ready(function () {
 
     // clear remote user's last event when it sends a mouseup
     socket.on('mouseup', function (msg) {
-        lastRemoteEvent[msg.user] = [-1, -1];
+        mouseup(msg);
     });
+
+    function mouseup(msg) {
+        lastRemoteEvent[msg.user] = [-1, -1];
+    }
 
     // clear board
     socket.on('clear message', function(msg) {
@@ -29,6 +35,10 @@ $().ready(function () {
 
     // draw events triggered by socket messages
     socket.on('draw message', function (msg) {
+        drawMessage(msg);
+    });
+
+    function drawMessage(msg){
         if (!lastRemoteEvent[msg.user]) {
             lastRemoteEvent[msg.user] = [-1, -1];
         }
@@ -46,7 +56,29 @@ $().ready(function () {
         };
         drawLine(segment);
         lastRemoteEvent[msg.user] = [msg.offX, msg.offY];
+    }
+
+    // handle entire data dump
+    socket.on('data dump', function(msg) {
+        if (playRealTime){
+            return;
+        } else {
+            msg.foreach(function (item) {
+                forwardMessages(item);
+            })
+        }
     });
+
+    function forwardMessages(msg) {
+        if (msg.type === "mouseup") {
+            mouseup(msg);
+        } else if (msg.type === "clear message") {
+            clearBoard(msg.color);
+        } else if (msg.type === "draw message")
+        {
+
+        }
+    }
 
     // this just sets the color when the picker gets clicked
     // will probably be handled differently in the future
@@ -122,7 +154,7 @@ $().ready(function () {
     }
 
     /*
-    Drawing function. It should recieve a dict in the following format
+    Drawing function. It should receive a dict in the following format
     drawSegment = { oldX: int, oldY: int, newX: int newY: int
                     strokeStyle: color, lineWidth: int}
      */

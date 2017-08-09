@@ -145,9 +145,10 @@ io.sockets.on('connection', function (socket) {
                  *  client decode it and use it, but this works so long as lots of people aren't constantly
                  *  re-joining a room with lots of drawing.
                  */
-                result.forEach(function (msg) {
-                    socket.emit(msg.type, msg);
-                });
+                socket.emit("data dump", result);
+//                result.forEach(function (msg) {
+//                    socket.emit(msg.type, msg);
+//                });
                 db.close();
             });
         });
