@@ -8,7 +8,9 @@ $().ready(function () {
     var mouseDown = false;
     var lineWidth = 5;
     var lastEmit = $.now();
-    var playRealTime = false;
+    var timerInterval = 50; // miliseconds
+    var myTimer = 0;
+    var myData;
 
     $(".draggable").draggable();
 
@@ -29,7 +31,7 @@ $().ready(function () {
     }
 
     // clear board
-    socket.on('clear message', function(msg) {
+    socket.on('clear message', function (msg) {
         clearBoard(msg.color);
     });
 
@@ -38,7 +40,7 @@ $().ready(function () {
         drawMessage(msg);
     });
 
-    function drawMessage(msg){
+    function drawMessage(msg) {
         if (!lastRemoteEvent[msg.user]) {
             lastRemoteEvent[msg.user] = [-1, -1];
         }
@@ -58,24 +60,39 @@ $().ready(function () {
         lastRemoteEvent[msg.user] = [msg.offX, msg.offY];
     }
 
+
+    // function to playback the whiteboard in realtime.
+
+    function playTimed() {
+        if (myData.length > 0)
+        {
+            setTimeout(playTimed(), timerInterval); // check every 50 miliseconds
+            myTimer += timerInterval;
+            while (myData.length > 0 && myData[0].timestap < myTimer){
+                forwardMessage(myData.shift());
+            }
+        }
+    }
     // handle entire data dump
-    socket.on('data dump', function(msg) {
-        if (playRealTime){
-            return;
+    socket.on('data dump', function (msg) {
+        if (realtime) {
+            myData = msg;
+            if (myData.length() > 0){
+                myTimer = myData[0].timestamp;
+            }
         } else {
             msg.forEach(function (item) {
-                forwardMessages(item);
+                forwardMessage(item);
             })
         }
     });
 
-    function forwardMessages(msg) {
+    function forwardMessage(msg) {
         if (msg.type === "mouseup") {
             mouseup(msg);
         } else if (msg.type === "clear message") {
             clearBoard(msg.color);
-        } else if (msg.type === "draw message")
-        {
+        } else if (msg.type === "draw message") {
             drawMessage(msg);
         }
     }
@@ -88,17 +105,18 @@ $().ready(function () {
         color = $(this).css("background-color");
     });
 
-    $(".controls").on("dblclick", 'li', function() {
-	color = $(this).css("background-color");
+    $(".controls").on("dblclick", 'li', function () {
+        color = $(this).css("background-color");
         clearBoard(color);
         emitClearMessage();
     });
 
     //helpers for above
     function clearBoard(myColor) {
-        context.fillStyle=myColor;
-        context.fillRect(0,0, 1900,1000);
+        context.fillStyle = myColor;
+        context.fillRect(0, 0, 1900, 1000);
     }
+
     function changeColor() {
         var r = $("#red").val();
         var g = $("#green").val();
