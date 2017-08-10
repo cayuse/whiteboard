@@ -9,7 +9,8 @@ $().ready(function () {
     var lineWidth = 5;
     var lastEmit = $.now();
     var timerInterval = 50; // miliseconds
-    var myTimer = 0;
+    var myTimer;
+    var curTime = 0;
     var myData;
 
     $(".draggable").draggable();
@@ -66,19 +67,21 @@ $().ready(function () {
     function playTimed() {
         if (myData.length > 0)
         {
-            setTimeout(playTimed(), timerInterval); // check every 50 miliseconds
-            myTimer += timerInterval;
-            while (myData.length > 0 && myData[0].timestap < myTimer){
+            curTime += timerInterval;
+            while (myData.length > 0 && myData[0].timestap < curTime){
                 forwardMessage(myData.shift());
             }
+        } else {
+            clearInterval(myTimer);
         }
     }
     // handle entire data dump
     socket.on('data dump', function (msg) {
-        if (realtime) {
+        if (realtime === "true") {
             myData = msg;
-            if (myData.length() > 0){
-                myTimer = myData[0].timestamp;
+            if (myData.length > 0){
+                curTime = myData[0].timestamp;
+                myTimer = setInterval(playTimed(), timerInterval);
             }
         } else {
             msg.forEach(function (item) {
