@@ -91,7 +91,7 @@ $().ready(function () {
     $(".controls").on("dblclick", 'li', function() {
 	color = $(this).css("background-color");
         clearBoard(color);
-        clearMessage();
+        emitClearMessage();
     });
 
     //helpers for above
@@ -110,7 +110,7 @@ $().ready(function () {
     canvas.mousedown(function (e) {
         lastEvent = e;
         mouseDown = true;
-        drawMessage(e); // emit a draw msg imed on mouse down
+        emitDrawMessage(e); // emit a draw msg imed on mouse down
     }).mousemove(function (e) {
         if (mouseDown && $.now() - lastEmit > 10) { // reduce emit frequency
             var segment = {
@@ -123,28 +123,28 @@ $().ready(function () {
             };
             drawLine(segment);
             lastEvent = e;
-            drawMessage(e);
+            emitDrawMessage(e);
         }
 
         // These functions tell the other clients you are done drawing
     }).mouseup(function () {
         mouseDown = false;
-        mouseupMessage();
+        emitMouseupMessage();
     }).mouseleave(function () {
         canvas.mouseup();
-        mouseupMessage();
+        emitMouseupMessage();
     });
 
     // Emitter Functions.
-    function mouseupMessage() {
+    function emitMouseupMessage() {
         socket.emit('mouseup', {'room': roomId});
     }
 
-    function clearMessage() {
+    function emitClearMessage() {
         socket.emit('clear message', {'color': color, 'room': roomId});
     }
 
-    function drawMessage(e) {
+    function emitDrawMessage(e) {
         socket.emit('draw message', {
             "offX": e.offsetX,
             "offY": e.offsetY,
