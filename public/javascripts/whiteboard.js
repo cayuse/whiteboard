@@ -63,7 +63,7 @@ $().ready(function () {
         if (playRealTime){
             return;
         } else {
-            msg.foreach(function (item) {
+            msg.forEach(function (item) {
                 forwardMessages(item);
             })
         }
@@ -76,7 +76,7 @@ $().ready(function () {
             clearBoard(msg.color);
         } else if (msg.type === "draw message")
         {
-
+            drawMessage(msg);
         }
     }
 
