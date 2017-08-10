@@ -65,27 +65,26 @@ $().ready(function () {
     // function to playback the whiteboard in realtime.
 
     function playTimed() {
-        if (myData.length > 0)
-        {
+        if (myData.length > 0) {
             curTime += timerInterval;
-            while (myData.length > 0 && myData[0].timestamp < curTime){
+            while (myData.length > 0 && myData[0].timestamp < curTime) {
                 forwardMessage(myData.shift());
             }
         } else {
             clearInterval(myTimer);
         }
     }
+
     // handle entire data dump
     socket.on('data dump', function (msg) {
         if (realtime === "true") {
             myData = msg;
-            if (myData.length > 0){
+            if (myData.length > 0) {
                 curTime = myData[0].timestamp;
-                myTimer = setInterval(function() {
-                    if (myData.length > 0)
-                    {
+                myTimer = setInterval(function () {
+                    if (myData.length > 0) {
                         curTime += timerInterval;
-                        while (myData.length > 0 && myData[0].timestamp < curTime){
+                        while (myData.length > 0 && myData[0].timestamp < curTime) {
                             forwardMessage(myData.shift());
                         }
                     } else {
