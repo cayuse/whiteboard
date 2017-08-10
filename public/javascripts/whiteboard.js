@@ -68,7 +68,7 @@ $().ready(function () {
         if (myData.length > 0)
         {
             curTime += timerInterval;
-            while (myData.length > 0 && myData[0].timestap < curTime){
+            while (myData.length > 0 && myData[0].timestamp < curTime){
                 forwardMessage(myData.shift());
             }
         } else {
@@ -81,7 +81,17 @@ $().ready(function () {
             myData = msg;
             if (myData.length > 0){
                 curTime = myData[0].timestamp;
-                myTimer = setInterval(playTimed(), timerInterval);
+                myTimer = setInterval(function() {
+                    if (myData.length > 0)
+                    {
+                        curTime += timerInterval;
+                        while (myData.length > 0 && myData[0].timestamp < curTime){
+                            forwardMessage(myData.shift());
+                        }
+                    } else {
+                        clearInterval(myTimer);
+                    }
+                }, timerInterval);
             }
         } else {
             msg.forEach(function (item) {
